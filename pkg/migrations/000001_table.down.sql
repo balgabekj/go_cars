@@ -1,1 +1,4 @@
-drop TABLE IF EXISTS car
+drop TABLE IF EXISTS car;
+DROP TABLE IF EXISTS owner;
+
+

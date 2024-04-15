@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"flag"
 	"fmt"
+	"github.com/balgabekj/go_car/pkg/jsonlog"
 	"github.com/balgabekj/go_car/pkg/model"
 	"github.com/gorilla/mux"
 	"log"
@@ -23,6 +24,7 @@ type config struct {
 type application struct {
 	config config
 	models model.Models
+	logger *jsonlog.Logger
 }
 
 func main() {
@@ -30,7 +32,7 @@ func main() {
 	var cfg config
 	flag.StringVar(&cfg.port, "port", ":8081", "API server port")
 	flag.StringVar(&cfg.env, "env", "development", "Environment (development|staging|production)")
-	flag.StringVar(&cfg.db.dsn, "db-dsn", "postgres://postgres:postgres@localhost:5432/cars?sslmode=disable", "PostgreSQL DSN")
+	flag.StringVar(&cfg.db.dsn, "db-dsn", "postgres://postgres:postgres@localhost:5432/gocars?sslmode=disable", "PostgreSQL DSN")
 	flag.Parse()
 
 	// Connect to DB
@@ -56,8 +58,15 @@ func (app *application) run() {
 
 	v1.HandleFunc("/cars", app.createCarHandler).Methods("POST")
 	v1.HandleFunc("/cars/{id}", app.getCarHandler).Methods("GET")
+	v1.HandleFunc("/cars", app.getAllCarHandler).Methods("GET")
 	v1.HandleFunc("/cars/{id}", app.updateCarHandler).Methods("PUT")
 	v1.HandleFunc("/cars/{id}", app.deleteCarHandler).Methods("DELETE")
+
+	v1.HandleFunc("/owners", app.createOwnerHandler).Methods("POST")
+	v1.HandleFunc("/owners/{id}", app.getOwnerHandler).Methods("GET")
+	v1.HandleFunc("/owners", app.getAllOwnersHandler).Methods("GET")
+	v1.HandleFunc("/owners/{id}", app.updateOwnerHandler).Methods("PUT")
+	v1.HandleFunc("/owners/{id}", app.deleteOwnerHandler).Methods("DELETE")
 
 	log.Printf("Starting server on %s\n", app.config.port)
 	err := http.ListenAndServe(app.config.port, r)
