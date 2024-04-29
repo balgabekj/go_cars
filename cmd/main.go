@@ -9,6 +9,7 @@ import (
 	"github.com/gorilla/mux"
 	"log"
 	"net/http"
+	"os"
 
 	_ "github.com/lib/pq"
 )
@@ -30,24 +31,28 @@ type application struct {
 func main() {
 	fmt.Println("Started server")
 	var cfg config
-	flag.StringVar(&cfg.port, "port", ":8081", "API server port")
+	flag.StringVar(&cfg.port, "port", ":8080", "API server port")``
 	flag.StringVar(&cfg.env, "env", "development", "Environment (development|staging|production)")
 	flag.StringVar(&cfg.db.dsn, "db-dsn", "postgres://postgres:postgres@localhost:5432/gocars?sslmode=disable", "PostgreSQL DSN")
 	flag.Parse()
 
 	// Connect to DB
+	logger := jsonlog.NewLogger(os.Stdout, jsonlog.LevelInfo)
 	db, err := openDB(cfg)
 	if err != nil {
-		log.Fatal(err)
+		logger.PrintError(err, nil)
 		return
 	}
-	defer db.Close()
-
+	defer func() {
+		if err := db.Close(); err != nil {
+			logger.PrintFatal(err, nil)
+		}
+	}()
 	app := &application{
 		config: cfg,
 		models: model.NewModels(db),
+		logger: logger,
 	}
-
 	app.run()
 }
 func (app *application) run() {
@@ -56,17 +61,16 @@ func (app *application) run() {
 
 	v1 := r.PathPrefix("/api/v1").Subrouter()
 
-	v1.HandleFunc("/cars", app.createCarHandler).Methods("POST")
-	v1.HandleFunc("/cars/{id}", app.getCarHandler).Methods("GET")
-	v1.HandleFunc("/cars", app.getAllCarHandler).Methods("GET")
-	v1.HandleFunc("/cars/{id}", app.updateCarHandler).Methods("PUT")
-	v1.HandleFunc("/cars/{id}", app.deleteCarHandler).Methods("DELETE")
+	v1.HandleFunc("/cars", app.requirePermission("cars:write", app.createCarHandler)).Methods("POST")
+	v1.HandleFunc("/cars/:id", app.requirePermission("cars:read", app.getCarHandler)).Methods("GET")
+	v1.HandleFunc("/cars", app.requirePermission("cars:read", app.getAllCarHandler)).Methods("GET")
+	v1.HandleFunc("/cars/:id", app.requirePermission("cars:write", app.updateCarHandler)).Methods("PUT")
+	v1.HandleFunc("/cars/:id", app.requirePermission("cars:write", app.deleteCarHandler)).Methods("DELETE")
 
-	v1.HandleFunc("/owners", app.createOwnerHandler).Methods("POST")
-	v1.HandleFunc("/owners/{id}", app.getOwnerHandler).Methods("GET")
-	v1.HandleFunc("/owners", app.getAllOwnersHandler).Methods("GET")
-	v1.HandleFunc("/owners/{id}", app.updateOwnerHandler).Methods("PUT")
-	v1.HandleFunc("/owners/{id}", app.deleteOwnerHandler).Methods("DELETE")
+	v1.HandleFunc("/users", app.registerUserHandler).Methods("POST")
+	v1.HandleFunc("/users/activated", app.activateUserHandler).Methods("PUT")
+
+	v1.HandleFunc("/tokens/authentication", app.createAuthenticationTokenHandler).Methods("POST")
 
 	log.Printf("Starting server on %s\n", app.config.port)
 	err := http.ListenAndServe(app.config.port, r)

@@ -9,14 +9,14 @@ import (
 )
 
 type Car struct {
-	ID      string  `json:"id"`
-	Model   string  `json:"model"`
-	Brand   string  `json:"brand"`
-	Year    *int    `json:"year"`
-	Color   string  `json:"color"`
-	Price   float64 `json:"price"`
-	IsUsed  bool    `json:"isUsed"`
-	OwnerID string  `json:"ownerId"`
+	ID     string  `json:"id"`
+	Model  string  `json:"model"`
+	Brand  string  `json:"brand"`
+	Year   *int    `json:"year"`
+	Color  string  `json:"color"`
+	Price  float64 `json:"price"`
+	IsUsed bool    `json:"isUsed"`
+	UserID string  `json:"userId"`
 }
 
 type CarModel struct {
@@ -27,19 +27,19 @@ type CarModel struct {
 
 func (m CarModel) Insert(car *Car) error {
 	query := `
-        INSERT INTO car (model, brand, year, color, price, isUsed, ownerID)
+        INSERT INTO car (model, brand, year, color, price, isUsed, userID)
         VALUES ($1, $2, $3, $4, $5, $6, $7)
         RETURNING id
     `
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	return m.DB.QueryRowContext(ctx, query, car.Model, car.Brand, car.Year, car.Color, car.Price, car.IsUsed, car.OwnerID).Scan(&car.ID)
+	return m.DB.QueryRowContext(ctx, query, car.Model, car.Brand, car.Year, car.Color, car.Price, car.IsUsed, car.UserID).Scan(&car.ID)
 }
 
 func (m CarModel) Get(id string) (*Car, error) {
 	query := `
-        SELECT id, model, brand, year, color, price, isUsed, ownerID
+        SELECT id, model, brand, year, color, price, isUsed, userID
         FROM car
         WHERE id = $1
     `
@@ -50,7 +50,7 @@ func (m CarModel) Get(id string) (*Car, error) {
 	defer cancel()
 
 	row := m.DB.QueryRowContext(ctx, query, id)
-	err := row.Scan(&car.ID, &car.Model, &car.Brand, &car.Year, &car.Color, &car.Price, &car.IsUsed, &car.OwnerID)
+	err := row.Scan(&car.ID, &car.Model, &car.Brand, &car.Year, &car.Color, &car.Price, &car.IsUsed, &car.UserID)
 	if err != nil {
 		return nil, err
 	}
@@ -59,7 +59,7 @@ func (m CarModel) Get(id string) (*Car, error) {
 
 func (m CarModel) GetAll(brand string, minYear int, maxYear int, filters Filters) ([]Car, Metadata, error) {
 	query := fmt.Sprintf(`
-		SELECT count(*) OVER(), id,model, brand, year,color, price, isUsed, ownerId
+		SELECT count(*) OVER(), id,model, brand, year,color, price, isUsed, userId
 		FROM car
 		WHERE (LOWER(brand) = LOWER($1) OR $1 = '')
 		AND (year >= $2 OR $2 = 0)
@@ -89,7 +89,7 @@ func (m CarModel) GetAll(brand string, minYear int, maxYear int, filters Filters
 
 	for rows.Next() {
 		var car Car
-		err := rows.Scan(&totalRecords, &car.ID, &car.Model, &car.Brand, &car.Year, &car.Color, &car.Price, &car.IsUsed, &car.OwnerID)
+		err := rows.Scan(&totalRecords, &car.ID, &car.Model, &car.Brand, &car.Year, &car.Color, &car.Price, &car.IsUsed, &car.UserID)
 		if err != nil {
 			return nil, Metadata{}, err
 		}
