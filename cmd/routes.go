@@ -19,14 +19,13 @@ func (app *application) routes() http.Handler {
 	cars.HandleFunc("/cars/{id}", app.requirePermissions("cars:write", app.deleteCarHandler)).Methods("DELETE")
 
 	// Category
-	cars.HandleFunc("/category/{categoryName}", app.getCarByCategoryHandler).Methods("GET")
+	cars.HandleFunc("/category/{categoryName}/cars", app.getCarByCategoryHandler).Methods("GET")
 
 	//Users
 	users := r.PathPrefix("/api/v1").Subrouter()
 
 	users.HandleFunc("/users", app.registerUserHandler).Methods("POST")
 	users.HandleFunc("/users/activated", app.activateUserHandler).Methods("PUT")
-	//
 	users.HandleFunc("/tokens/authentication", app.createAuthenticationTokenHandler).Methods("POST")
 
 	return app.authenticate(r)

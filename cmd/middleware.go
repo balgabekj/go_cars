@@ -37,13 +37,13 @@ func (app *application) authenticate(next http.Handler) http.Handler {
 			return
 		}
 
-		// Extract the actual authentication toekn from the header parts
+		// Extract the actual authentication token from the header parts
 		token := headerParts[1]
 
 		// Validate the token to make sure it is in a sensible format.
 		v := validator.New()
 
-		// If the token isn't valid, use the invalidAuthenticationtokenResponse
+		// If the token isn't valid, use the invalid Authentication tokenResponse
 		// helper to send a response, rather than the failedValidatedResponse helper.
 		if model.ValidateTokenPlaintext(v, token); !v.Valid() {
 			app.invalidAuthenticationTokenResponse(w, r)
@@ -126,7 +126,7 @@ func (app *application) requirePermissions(code string, next http.HandlerFunc) h
 			return
 		}
 
-		// Otherwise, they have the required permission so we call the next handler in the chain.
+		// Otherwise, they have the required permission, so we call the next handler in the chain.
 		next.ServeHTTP(w, r)
 	})
 
