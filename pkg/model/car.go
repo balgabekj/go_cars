@@ -9,14 +9,14 @@ import (
 )
 
 type Car struct {
-	ID           string  `json:"id"`
+	ID           int     `json:"id"`
 	Model        string  `json:"model"`
 	Brand        string  `json:"brand"`
-	Year         *int    `json:"year"`
-	Color        string  `json:"color"`
+	Year         int     `json:"year"`
 	Price        float64 `json:"price"`
+	Color        string  `json:"color"`
 	IsUsed       bool    `json:"isUsed"`
-	UserID       string  `json:"userId"`
+	UserID       int     `json:"userId"`
 	CategoryName string  `json:"categoryName"`
 }
 
@@ -26,10 +26,10 @@ type CarModel struct {
 	ErrorLog *log.Logger
 }
 
-func (m CarModel) Insert(car *Car) error {
+func (m *CarModel) Insert(car *Car) error {
 	query := `
-        INSERT INTO cars (model, brand, year, color, price, isUsed, userID, categoryName)
-        VALUES ($1, $2, $3, $4, $5, $6, $7)
+        INSERT INTO cars (model, brand, year, color, price, isUsed, userId, categoryName)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
         RETURNING id
     `
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
@@ -60,7 +60,7 @@ func (m CarModel) Get(id string) (*Car, error) {
 
 func (m CarModel) GetAll(brand string, minYear int, maxYear int, filters Filters) ([]Car, Metadata, error) {
 	query := fmt.Sprintf(`
-		SELECT count(*) OVER(), id,model, brand, year,color, price, isUsed, userId, categoryName
+		SELECT count(*) OVER(), id,model, brand, year,color, price, isUsed, userId
 		FROM cars
 		WHERE (LOWER(brand) = LOWER($1) OR $1 = '')
 		AND (year >= $2 OR $2 = 0)
@@ -90,7 +90,7 @@ func (m CarModel) GetAll(brand string, minYear int, maxYear int, filters Filters
 
 	for rows.Next() {
 		var car Car
-		err := rows.Scan(&totalRecords, &car.ID, &car.Model, &car.Brand, &car.Year, &car.Color, &car.Price, &car.IsUsed, &car.UserID, &car.CategoryName)
+		err := rows.Scan(&totalRecords, &car.ID, &car.Model, &car.Brand, &car.Year, &car.Color, &car.Price, &car.IsUsed, &car.UserID)
 		if err != nil {
 			return nil, Metadata{}, err
 		}
@@ -121,6 +121,7 @@ func (m CarModel) Update(car *Car) error {
 }
 
 func (m CarModel) Delete(id string) error {
+
 	query := `
         DELETE FROM cars
         WHERE id = $1

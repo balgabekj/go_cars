@@ -7,6 +7,7 @@ import (
 	"github.com/balgabekj/go_car/pkg/validator"
 	"github.com/gorilla/mux"
 	"net/http"
+	"strconv"
 )
 
 func (app *application) createCarHandler(w http.ResponseWriter, r *http.Request) {
@@ -102,7 +103,7 @@ func (app *application) updateCarHandler(w http.ResponseWriter, r *http.Request)
 	}
 
 	// Set car ID for update
-	car.ID = id
+	car.ID, _ = strconv.Atoi(id)
 
 	// Update car in the database
 	err = app.models.Cars.Update(&car)
@@ -133,6 +134,30 @@ func (app *application) deleteCarHandler(w http.ResponseWriter, r *http.Request)
 	// Return success response
 	w.WriteHeader(http.StatusNoContent)
 }
+
+//func (app *application) deleteCurrencyHandler(w http.ResponseWriter, r *http.Request) {
+//	// Извлечь ID элемента меню из URL
+//	vars := mux.Vars(r)
+//	param := vars["menuId"]
+//	id, err := strconv.Atoi(param)
+//	if err != nil || id < 1 {
+//		app.respondWithError(w, http.StatusBadRequest, "Invalid menu ID")
+//		return
+//	}
+//
+//	// Проверить разрешение DELETE для пользователя
+//	user := app.contextGetUser(r)
+//
+//
+//	// Выполнить удаление элемента меню
+//	err = app.models.Menu.Delete(id)
+//	if err != nil {
+//		app.respondWithError(w, http.StatusInternalServerError, "Failed to delete menu item")
+//		return
+//	}
+//
+//	app.respondWithJSON(w, http.StatusOK, map[string]string{"result": "success"})
+//}
 
 func (app *application) respondWithError(w http.ResponseWriter, code int, message string) {
 	app.respondWithJson(w, code, map[string]string{"error": message})

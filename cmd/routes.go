@@ -9,7 +9,7 @@ import (
 func (app *application) routes() http.Handler {
 	fmt.Println("Running")
 	r := mux.NewRouter()
-
+	// Cars
 	cars := r.PathPrefix("/api/v1").Subrouter()
 
 	cars.HandleFunc("/cars", app.createCarHandler).Methods("POST")
@@ -17,8 +17,11 @@ func (app *application) routes() http.Handler {
 	cars.HandleFunc("/cars", app.getAllCarHandler).Methods("GET")
 	cars.HandleFunc("/cars/{id}", app.updateCarHandler).Methods("PUT")
 	cars.HandleFunc("/cars/{id}", app.requirePermissions("cars:write", app.deleteCarHandler)).Methods("DELETE")
+
+	// Category
 	cars.HandleFunc("/category/{categoryName}", app.getCarByCategoryHandler).Methods("GET")
-	//
+
+	//Users
 	users := r.PathPrefix("/api/v1").Subrouter()
 
 	users.HandleFunc("/users", app.registerUserHandler).Methods("POST")
