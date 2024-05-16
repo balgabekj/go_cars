@@ -20,6 +20,7 @@ type Models struct {
 	Users       UserModel
 	Tokens      TokenModel
 	Permissions PermissionModel
+	Categories  CategoryModel
 }
 
 func NewModels(db *sql.DB) Models {
@@ -42,6 +43,11 @@ func NewModels(db *sql.DB) Models {
 			ErrorLog: errorLog,
 		},
 		Permissions: PermissionModel{
+			DB:       db,
+			InfoLog:  infoLog,
+			ErrorLog: errorLog,
+		},
+		Categories: CategoryModel{
 			DB:       db,
 			InfoLog:  infoLog,
 			ErrorLog: errorLog,
