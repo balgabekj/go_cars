@@ -187,24 +187,3 @@ func (app *application) readJSON(w http.ResponseWriter, r *http.Request, dst int
 
 	return nil
 }
-
-func (app *application) getCarByCategoryHandler(w http.ResponseWriter, r *http.Request) {
-	// Extract car ID from URL parameters
-	params := mux.Vars(r)
-	categoryName := params["categoryName"]
-
-	// Retrieve car from the database
-	car, err := app.models.Cars.GetByCategory(categoryName)
-	if err != nil {
-		app.models.Cars.ErrorLog.Println(err)
-		if err == sql.ErrNoRows {
-			http.Error(w, "Car not found", http.StatusNotFound)
-		} else {
-			http.Error(w, "Error retrieving car", http.StatusInternalServerError)
-		}
-		return
-	}
-
-	// Return car as JSON response
-	json.NewEncoder(w).Encode(car)
-}

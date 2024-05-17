@@ -20,7 +20,9 @@ func (app *application) routes() http.Handler {
 
 	// Category
 	cars.HandleFunc("/category/{categoryName}/cars", app.getCarByCategoryHandler).Methods("GET")
-
+	cars.HandleFunc("/category", app.createCategoryHandler).Methods("POST")
+	cars.HandleFunc("/category/{name}", app.updateCategoryHandler).Methods("PUT")
+	cars.HandleFunc("/category/{name}", app.deleteCategoryHandler).Methods("DELETE")
 	//Users
 	users := r.PathPrefix("/api/v1").Subrouter()
 
